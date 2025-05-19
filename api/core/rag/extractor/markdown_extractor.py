@@ -7,6 +7,8 @@ from typing import Optional, cast
 from core.rag.extractor.extractor_base import BaseExtractor
 from core.rag.extractor.helpers import detect_file_encodings
 from core.rag.models.document import Document
+import logging
+
 
 
 class MarkdownExtractor(BaseExtractor):
@@ -51,7 +53,11 @@ class MarkdownExtractor(BaseExtractor):
         The keys are the headers and the values are the text under each header.
 
         """
+
+        logging.info(f"markdown_to_tups2: {self._file_path}")
+        
         markdown_tups: list[tuple[Optional[str], str]] = []
+        markdown_text = re.sub(r'\n{2,}', '\n', markdown_text) # 将连续的换行符替换为单个换行符
         lines = markdown_text.split("\n")
 
         current_header = None
@@ -66,7 +72,8 @@ class MarkdownExtractor(BaseExtractor):
             if code_block_flag:
                 current_text += line + "\n"
                 continue
-            header_match = re.match(r"^#+\s", line)
+            header_match = re.match(r"^#{1,3}\s", line) # 只解析低于3级的标题
+
             if header_match:
                 if current_header is not None:
                     markdown_tups.append((current_header, current_text))
